@@ -13,10 +13,13 @@ public class ProductController {
     private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     @PostMapping("/product")
-    Map<String, String> product(@RequestParam("status") String status, @RequestParam("userId") String userId,
-                                @RequestParam("rollBack") String rollBack) {
+    Map<String, String> product(@RequestBody Map<String, String>request) {
         Map<String, String> product = new HashMap<>();
-        if ("productFailure".equalsIgnoreCase(status) && !rollBack.equals("true")) {
+        String status = request.get("status");
+        String userId = request.getOrDefault("userId",null);
+        String rollBack = request.getOrDefault("rollBack",null);
+
+        if ("productReserveFailure".equalsIgnoreCase(status) && rollBack ==null) {
             product.put("failure", "Out of stack--testing!");
             product.put("code", "00003");
             log.info("get-product ::failure::{}", product);
@@ -44,20 +47,23 @@ public class ProductController {
 
 
     @PostMapping("/product-confirm")
-    Map<String, String> productConfirm(@RequestBody Map<String, String> paymentDetails) {
+    Map<String, String> productConfirm(@RequestBody Map<String, String> request) {
+        log.info("productConfirm ::start::{}", request);
         Map<String, String> orderConfirm = new HashMap<>();
-        if ("productConfirmFailure".equalsIgnoreCase(paymentDetails.get("status"))) {
+        String status = request.get("status");
+        String userId = request.getOrDefault("userId",null);
+        String productReserved = request.getOrDefault("productReserved",null);
+        String paymentId = request.getOrDefault("paymentId",null);
+        if ("productConfirmFailure".equalsIgnoreCase(status)) {
             orderConfirm.put("failure", "product-confirm failed---testing!");
             orderConfirm.put("code", "00006");
             log.info("productConfirm ::failure::{}", orderConfirm);
             return orderConfirm;
         }
-        if (paymentDetails != null && !paymentDetails.isEmpty()) {
+        if (paymentId!=null && productReserved != null && !productReserved.isEmpty()) {
             orderConfirm.put("name", "product_1");
-            orderConfirm.put("productId", "33333");
-            orderConfirm.put("count", "4");
-            orderConfirm.put("productConfirmed", "true");
-            orderConfirm.put("success", "success");
+            orderConfirm.put("orderId", "OID-090987876");
+            orderConfirm.put("success", "Order successful, thanks for choosing us.");
             orderConfirm.put("code", "00000");
             log.info("productConfirm ::success::{}", orderConfirm);
         } else {

@@ -13,7 +13,6 @@ public class NotificationController {
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
     @PostMapping("/notification")
     Map<String, String> sendNotification(@RequestBody Map<String, String> message){
-
             message.put("status","message sent successful");
           log.info("sendNotification ::success::{}",message);
         return message;

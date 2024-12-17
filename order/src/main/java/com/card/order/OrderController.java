@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
+
 
 import java.util.Map;
 
@@ -17,8 +17,8 @@ public class OrderController {
     OrderService orderService;
 
     @PostMapping("/post-order")
-    Mono<Map<String, String>> order(@RequestParam("status") String status, @RequestParam("rollBack") String rollBack){
-        return orderService.order(status, rollBack);
+    Map<String, String> order(@RequestParam("status") String status){
+        return orderService.order(status);
     }
 }
 

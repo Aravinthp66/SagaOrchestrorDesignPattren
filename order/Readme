@@ -1,0 +1,66 @@
+Saga Orchestrator design pattern
+---------------------------------------------------------------------------------------
+Overview
+Unified Execution Flow Architecture:
+
+Start Order Processing:
+	order(status) is called.
+Fetch User Details:
+	Call getUserDetailsRequest(request).
+		Success: If userId is valid [proceed to Reserve Product].
+		Failure: Return a failure response ("No user found!").
+Reserve Product:
+	Call reserveProductRequest(request).
+		Success: If productReserved is true, [proceed to Process Payment].
+		Failure: Call sendNotificationRequest(response) [proceed to Send Notification].
+		Return a failure response ("Product reservation failed").
+
+Process Payment:
+	Call processPayment(request).
+		Success: If code is 00000 [proceed to Confirm Order]
+		Failure:
+			Call rollback logic:
+			Revert product reservation: reserveProductRequest(request) with rollBack=true. [proceed to Revert product reservation]
+			Call sendNotificationRequest(response).[proceed to Send Notification].
+			Return a failure response ("Payment processing failed").
+Confirm Order:
+	Call orderConfirm(request).
+		Success: If code is 00000 [proceed to Send Notification].
+			Call sendNotificationRequest(response).
+			Return the final success response.
+		Failure:
+			Call rollback logic:
+			Revert product reservation: reserveProductRequest(request) with rollBack=true.[proceed to Revert product reservation]
+			Revert payment: paymentRequest(request) with rollBack=true. [proceed to Revert payment]
+			Call sendNotificationRequest(response). [proceed to Send Notification].
+			Return a failure response ("Order confirmation failed").			
+
+Send Notification:
+	Call sendNotificationRequest(response).
+	Return the final success or failure response.
+
+Revert product reservation:
+	revert reserve product
+Revert payment:
+	revert payment
+
+____________________________________________________________________________
+
+
+Api:  http://localhost:8084/api/post-order?status=success   
+
+requestParam
+	status      //possible status:: success, userFailure, productReserveFailure, paymentFailure, productConfirmFailure
+
+response code:
+
+  "00000" -> Order successful [success]
+  "00001" -> no user found [ userFailure ]
+  "00003" -> Out of stack--testing [productReserveFailure]
+  "00005" -> Payment failure---testing [paymentFailure]
+  "00006" -> Order not successful, please try again! [productConfirmFailure]
+
+
+1. Status is to test with manually success and failure cases purpose. 
+For while testing success and failure cases that can be verified through logs whether the compensation entry properly execute or not.
+_____________________________________________________________________________
